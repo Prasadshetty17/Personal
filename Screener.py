@@ -1,6 +1,7 @@
 import pandas_datareader as web
 import datetime as dt
 import pandas as pd
+import nsepy
 
 
 def Data():
@@ -191,6 +192,7 @@ def Shares():
                 2)
             low = data['Low'].mean()
             high = data['High'].mean()
+            vol = data['Volume'].mean()
 
             sma = round(df['Close'].rolling(20).mean(), 2)
             std = df['Close'].rolling(20).std()
@@ -201,11 +203,11 @@ def Shares():
             condition_2 = cmp >= df['SMA_20'][-1]  # 20 days Moving Average
             condition_3 = df['ub'][-1] > cmp > df['lb'][-1]  # Bollinger Band
             condition_4 = (df['Close'][-22] < df['Close'][-11] < df['Close'][-1]) and (
-                    df['Open'][-22] < df['Open'][-11] < df['Open'][
-                -1]) and month_change > 10  # Higher High Lower Low Strategy
+                    df['Open'][-22] < df['Open'][-11] < df['Open'][-1]) and month_change > 10  # Higher High Lower Low Strategy
             condition_5 = ((low + high) / 2) < cmp  # Support Resistance Strategy
+            condition_6 = df['Volume'][-1] > (vol * 1.5)  # Volume Breakout
 
-            if condition_1 and condition_2 and condition_3 and condition_4 and condition_5:
+            if condition_1 and condition_2 and condition_3 and condition_4 and condition_5 and condition_6:
                 final_df_new = pd.DataFrame({'Ticker': [symbol],
                                              'CMP': [cmp],
                                              '1D_return': [day_Change],
@@ -220,8 +222,8 @@ def Shares():
         final_df.set_index('Ticker')
         print(final_df)
         final_df.reset_index(drop=True, inplace=True)
-        final_df.sort_values(by='1W_return', ascending=True)
-        final_df.to_csv(f'../Data/Swing_Trades.csv')
+    final_df.sort_values(by='1M_return', ascending=True)
+    final_df.to_csv(f'../Data/Swing_Trades.csv')
 
 
 def Share_Data():
@@ -287,6 +289,8 @@ def Share_Data():
 
 
 def Portfolio():
+    sd = dt.datetime.now() - dt.timedelta(days=1825)
+    ed = dt.datetime.now()
     symbol = pd.read_csv('../Data/Bull shares.csv')
     symbol = symbol['Ticker'].tolist()
     inv_date = input('Enter Date yyyy-mm-dd: ')
